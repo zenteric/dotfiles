@@ -1,0 +1,258 @@
+# vim: set ft=sh:
+
+OS=$(uname)
+echo "Found OS: $OS"
+if [[ "$OS" == 'Linux' ]]
+then
+  if [ -e /etc/arch-release ]
+  then
+    export DIST='arch'
+  elif [ -e /etc/debian_version ]
+  then
+    export DIST='debian'
+  elif [ -e /etc/redhat-release ]
+  then
+    export DIST='redhat'
+  elif grep CoreOS /etc/lsb-release &> /dev/null
+  then
+    export DIST='coreos'
+  fi
+  echo "Found Linux Distribution: $DIST"
+else
+  DIST="$OS"
+fi
+
+[ -e /etc/lsb-release ] && . /etc/lsb-release
+DISTRIB_ID=${DISTRIB_ID:-}
+
+# get hostname
+HOSTNAME=$(hostname)
+
+# install the fresh binary
+fresh freshshell/fresh bin/fresh --bin
+
+#
+# bash
+#
+if which bash &> /dev/null
+then
+  fresh-options --file=~/.bash_profile --marker
+    fresh shell/fresh.sh
+    fresh shell/generic.sh
+    for ondvp in $(ls -1 ~/.dotfiles/shell/apps/ondemand | cut -f1 -d.)
+    do
+      if which $ondvp &>/dev/null
+      then
+        echo "bash (ondemand): $ondvp"
+        fresh shell/apps/ondemand/$ondvp.sh
+      fi
+    done
+    [ -e shell/os/${OS}.sh ] && fresh shell/os/${OS}.sh
+    [ -e shell/os/${OS}.bash ] && fresh shell/os/${OS}.bash
+    [[ "$OS" == 'Linux' ]] && [ -e shell/os/Linux/${DIST}.sh ] && fresh shell/os/Linux/${DIST}.sh
+    fresh shell/bash/bash.bash
+    fresh shell/git.sh
+    fresh shell/notes.sh
+    fresh shell/devlang.sh
+    fresh shell/virtual.sh
+  fresh-options
+  fresh shell/bash/bashrc --file
+fi
+
+#
+# zsh
+#
+if which zsh &> /dev/null
+then
+  fresh-options --file=~/.zshrc --marker
+    fresh shell/fresh.sh
+    fresh shell/zsh/fresh.zsh
+    fresh shell/zsh/zshrc.zsh
+    fresh shell/zsh/prompt.zsh
+    fresh shell/zsh/python.zsh
+    fresh shell/zsh/rprompt.zsh
+    fresh shell/generic.sh
+    for ondvp in $(ls -1 ~/.dotfiles/shell/apps/ondemand | cut -f1 -d.)
+    do
+      if which $ondvp &>/dev/null
+      then
+        echo "zsh (ondemand): $ondvp"
+        fresh shell/apps/ondemand/$ondvp.sh
+      fi
+    done
+    [ -e shell/os/${OS}.sh ] && fresh shell/os/${OS}.sh
+    [ -e shell/os/${OS}.zsh ] && fresh shell/os/${OS}.zsh
+    [[ "$OS" == 'Linux' ]] && [ -e shell/os/Linux/${DIST}.sh ] && fresh shell/os/Linux/${DIST}.sh
+    fresh shell/git.sh
+    fresh shell/notes.sh
+    fresh shell/devlang.sh
+    fresh shell/virtual.sh
+  fresh-options
+
+  #fresh zsh-users/zsh-completions src --file=completion/
+  fresh freshshell/fresh contrib/completion/fresh-completion.zsh --file=completion/_fresh
+
+  # conditional completions
+  if which vagrant &>/dev/null
+  then
+    fresh zsh-users/zsh-completions src/_vagrant --file=completion/_vagrant
+  fi
+  if which VBoxManage &>/dev/null
+  then
+    fresh zsh-users/zsh-completions src/_virtualbox --file=completion/_virtualbox
+  fi
+  if which docker &>/dev/null
+  then
+    fresh felixr/docker-zsh-completion _docker --file=completion/_docker
+  fi
+  if which ag &>/dev/null
+  then
+    fresh zsh-users/zsh-completions src/_ag --file=completion/_ag
+  fi
+  if which virsh &>/dev/null
+  then
+    fresh zsh-users/zsh-completions src/_virsh --file=completion/_virsh
+  fi
+fi
+
+# simplified zshrc
+if which zsh &> /dev/null
+then
+  fresh-options --file=~/.zshrc.simple --marker
+    fresh shell/zsh/zshrc.zsh
+    fresh shell/zsh/prompt.zsh
+    fresh shell/zsh/rprompt.zsh
+    fresh shell/os/Linux.sh
+    fresh shell/apps/ondemand/systemctl.sh
+    fresh shell/git.sh
+    fresh shell/generic.sh
+    fresh shell/server.sh
+  fresh-options
+fi
+
+#
+# vim
+#
+if which vim &> /dev/null
+then
+  fresh-options --file=~/.vimrc --marker=\"
+    fresh vim/vimrc
+    if [[ "$OS" == "Linux" ]]; then
+        fresh vim/linux.vim
+    fi
+    if [[ "$OS" == "Darwin" ]]; then
+      fresh vim/mac.vim
+    fi
+    if [[ "$DIST" != 'coreos' ]]
+    then
+      fresh twe4ked/dotfiles vim/vundle_before.vim
+      fresh vim/vundle.vim
+      for ondvp in $(ls -1 ~/.dotfiles/vim/plugins/ondemand | cut -f1 -d.)
+      do
+        echo "vim (ondemand): $ondvp"
+        if which $ondvp &>/dev/null
+        then
+          fresh vim/plugins/ondemand/$ondvp.vim
+        fi
+      done
+      fresh vim/plugins/active/\*.vim
+      fresh vim/local.vim
+      fresh twe4ked/dotfiles vim/vundle_after.vim
+      fresh vim/full
+    fi
+  fresh-options
+  if which nvim &> /dev/null
+  then
+    [ ! -d ~/.config ] && mkdir -vp ~/.config
+    [ ! -h ~/.config/nvim ] && ln -sfv ~/.vim ~/.config/nvim
+    [ ! -h ~/.config/nvim/init.vim ] && ln -sfv ~/.vimrc ~/.config/nvim/init.vim
+  fi
+
+  if [[ "$DIST" != 'coreos' ]]
+  then
+    # vimcat binary
+    fresh vim-scripts/vimcat vimcat --bin
+
+    init_vim() {
+      if which vim &> /dev/null && ! [ -d $HOME/.vim/bundle/vundle ]; then
+        vim || [ -d $HOME/.vim/bundle/vundle ]
+      fi
+    }
+  fi
+fi
+
+if [ -e /etc/debian_version ]
+then
+  fresh blyork/apt-history apt-history --bin
+fi
+
+# don't install stuff in root's home
+if [[ "$USER" != 'root' ]]
+then
+  if which pacman &> /dev/null
+  then
+    fresh giddie/bits-n-pieces pacman-undo/pacman-undo --bin
+    fresh oshazard/apacman apacman --bin
+  fi
+
+  if which conky &> /dev/null
+  then
+    fresh config/conkyrc/$(hostname) --file=~/.conkyrc --ignore-missing
+  fi
+
+  if which bspwm &> /dev/null
+  then
+    [[ -d ~/.config/bspwm ]] || mkdir -p ~/.config/bspwm
+    [[ -d ~/.config/sxhkd ]] || mkdir -p ~/.config/sxhkd
+    fresh config/bspwm/bspwmrc --bin=~/.config/bspwm/bspwmrc
+    fresh config/sxhkd/sxhkdrc --file=~/.config/sxhkd/sxhkdrc
+  fi
+
+  fresh config/xprofile_$(hostname) --file=~/.xprofile --ignore-missing
+  fresh config/tint3rc_$(hostname) --file=~/.tint3rc --ignore-missing
+fi
+
+if which tmux &> /dev/null
+then
+  fresh config/tmux.conf --file=~/.tmux.conf
+fi
+
+if which screen &> /dev/null
+then
+  fresh config/screenrc --file
+fi
+
+if which git &> /dev/null
+then
+  fresh config/gitconfig --file
+  fresh config/gitignore --file
+fi
+
+if which top &> /dev/null
+then
+  fresh config/toprc --file
+fi
+
+if [[ "$OS" == "Darwin" ]]; then
+  fresh gnachman/iTerm2 tests/imgcat --bin
+fi
+
+if [ ! -e /etc/inputrc ]
+then
+  fresh config/inputrc --file
+fi
+
+fresh_after_build() {
+  if [[ "$(type -t init_vim)" == 'function' ]]
+  then
+    init_vim
+  fi
+  for cfg in .toprc
+  do
+    [ -e $HOME/$cfg ] && chmod 0600 $HOME/$cfg
+  done
+  for cfg in .config/bspwm/bspwmrc .config/sxhkd/sxhkdrc
+  do
+    [ -e $HOME/$cfg ] && chmod 0700 $HOME/$cfg
+  done
+}

@@ -1,0 +1,35 @@
+[user]
+    name = Emre.Saricicek
+    email= emre.saricicek@noaa.gov
+[push]
+    default = matching
+[core]
+    editor = vim 
+[color]
+    ui = true
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+[color "status"]
+    added = yellow
+    changed = green
+    untracked = cyan
+[color]
+    ui = true
+[color "diff"]
+    meta = blue
+    frag = magenta
+    old = red 
+    new = green
+[core]
+    whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
+# Show files ignored by git:
+    ign = ls-files -o -i --exclude-standard
+[github]
+    user = zenteric

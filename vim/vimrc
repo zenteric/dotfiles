@@ -1,0 +1,62 @@
+set nocompatible
+set modelines=2
+set nu
+
+set tabstop=2
+set softtabstop=2
+set shiftwidth=2
+set expandtab
+set shell=/bin/bash
+
+nmap <F11> :set invpaste<CR>
+" allow toggling in insert mode
+set pastetoggle=<F11>
+
+" toggle the gutter
+function! ToggleGutters()
+  :set invnumber
+  if exists("*GitGutterToggle")
+    :GitGutterToggle
+  endif
+  if exists("*SyntasticToggleMode")
+    :SyntasticToggleMode
+  endif
+endfunction
+nmap <F12> :call ToggleGutters()<CR>
+
+" don't create stupid files
+set nobackup
+set noundofile
+
+" allow all backspace in insert
+:set backspace=indent,eol,start
+
+" jump to last position when re-opening a file
+if has("autocmd")
+  au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$")
+    \| exe "normal! g'\"" | endif
+endif
+" except for git commits
+autocmd FileType gitcommit call setpos('.', [0, 1, 1, 0])
+
+" fix my damn inability to type
+command Qa qa
+command Q q
+
+" set a leader!
+:let mapleader=","
+
+" shortcuts
+nnoremap <C-h> :bprevious<CR>
+nnoremap <C-l> :bnext<CR>
+nnoremap <Leader>l :redraw!<CR>
+map <C-t> :enew <Enter>
+" keep buffer undo when switching
+set hidden
+
+" open help in a new tab
+cabbrev help vertical help
+
+" highlight unwanted chars
+set list
+set listchars=tab:»·,trail:·,nbsp:·
