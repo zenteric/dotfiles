@@ -157,7 +157,7 @@ then
       done
       fresh vim/plugins/active/\*.vim
       fresh vim/local.vim
-      fresh twe4ked/dotfiles vim/vundle_after.vim
+      fresh twe4ked/dotfiles vim/plug.vim
       fresh vim/full
     fi
   fresh-options
