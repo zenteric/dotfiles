@@ -1,4 +1,4 @@
-Plugin 'rking/ag.vim'
+Plug 'rking/ag.vim'
 
 let g:ctrlp_user_command = 'ag %s --files-with-matches -g "" --ignore "\.git$\|\.hg$\|\.svn$"'
 
