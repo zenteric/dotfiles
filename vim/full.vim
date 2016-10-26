@@ -1,13 +1,16 @@
 syntax on
 filetype plugin indent on
 
-colorscheme vibrantink
+silent ! colorscheme vibrantink
 highlight Normal ctermbg=NONE
 
 "colorscheme vividchalk
 "set background=dark
 "highlight clear LineNr
 "highlight clear SignColumn
+
+set cursorline
+highlight CursorLine ctermbg=233
 
 " set diff to vertical
 set diffopt+=vertical
