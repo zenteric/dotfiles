@@ -4,9 +4,9 @@ filetype plugin indent on
 "silent ! colorscheme vibrantink
 "highlight Normal ctermbg=NONE
 
-colorscheme Hemisu
+silent! colorscheme jellybeans_custom
+set background=dark
 
-"set background=dark
 "highlight clear LineNr
 "highlight clear SignColumn
 
