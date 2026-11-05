@@ -1,2 +1,10 @@
+*.sw?
+.idea
+.buildpath
+.project
+.settings
+.vagrant
 .DS_Store
+nbproject
+.thumbs
 tmux/plugins/
